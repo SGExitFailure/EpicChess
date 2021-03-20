@@ -29,6 +29,8 @@ var GameEngine =
   whiteTurn: true,
 
   squares: [],
+  available: [],
+  selected: [],
   board: document.getElementById("chess-board"),
 
 
@@ -40,25 +42,29 @@ var GameEngine =
      We are going to use this table to check if the move
      is valid or not,and move the pieces accordingly.
   */
-  initialTable: [
-    [[wRook, idle], [wKnight, idle], [wBishop, idle], [wKing, idle], [wQueen, idle], [wBishop, idle], [wKnight, idle], [wRook, idle]],
-    [[wPawn, idle], [wPawn, idle], [wPawn, idle], [wPawn, idle], [wPawn, idle], [wPawn, idle], [wPawn, idle], [wPawn, idle]],
-    [[empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle]],
-    [[empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle]],
-    [[empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle]],
-    [[empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle]],
-    [[bPawn, idle], [bPawn, idle], [bPawn, idle], [bPawn, idle], [bPawn, idle], [bPawn, idle], [bPawn, idle], [bPawn, idle]],
-    [[bRook, idle], [bKnight, idle], [bBishop, idle], [bKing, idle], [bQueen, idle], [bBishop, idle], [bKnight, idle], [bRook, idle]]],
+  initialTable:
+    [
+      [wRook, wKnight, wBishop, wKing, wQueen, wBishop, wKnight, wRook],
+      [wPawn, wPawn, wPawn, wPawn, wPawn, wPawn, wPawn, wPawn],
+      [empty, empty, empty, empty, empty, empty, empty, empty],
+      [empty, empty, empty, empty, empty, empty, empty, empty],
+      [empty, empty, empty, empty, empty, empty, empty, empty],
+      [empty, empty, empty, empty, empty, empty, empty, empty],
+      [bPawn, bPawn, bPawn, bPawn, bPawn, bPawn, bPawn, bPawn],
+      [bRook, bKnight, bBishop, bKing, bQueen, bBishop, bKnight, bRook]
+    ],
 
-  currentTable: [
-    [[wRook, idle], [wKnight, idle], [wBishop, idle], [wKing, idle], [wQueen, idle], [wBishop, idle], [wKnight, idle], [wRook, idle]],
-    [[wPawn, idle], [wPawn, idle], [wPawn, idle], [wPawn, idle], [wPawn, idle], [wPawn, idle], [wPawn, idle], [wPawn, idle]],
-    [[empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle]],
-    [[empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle]],
-    [[empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle]],
-    [[empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle], [empty, idle]],
-    [[bPawn, idle], [bPawn, idle], [bPawn, idle], [bPawn, idle], [bPawn, idle], [bPawn, idle], [bPawn, idle], [bPawn, idle]],
-    [[bRook, idle], [bKnight, idle], [bBishop, idle], [bKing, idle], [bQueen, idle], [bBishop, idle], [bKnight, idle], [bRook, idle]]],
+  currentTable:
+    [
+      [wRook, wKnight, wBishop, wKing, wQueen, wBishop, wKnight, wRook],
+      [wPawn, wPawn, wPawn, wPawn, wPawn, wPawn, wPawn, wPawn],
+      [empty, empty, empty, empty, empty, empty, empty, empty],
+      [empty, empty, empty, empty, empty, empty, empty, empty],
+      [empty, empty, empty, empty, empty, empty, empty, empty],
+      [empty, empty, empty, empty, empty, empty, empty, empty],
+      [bPawn, bPawn, bPawn, bPawn, bPawn, bPawn, bPawn, bPawn],
+      [bRook, bKnight, bBishop, bKing, bQueen, bBishop, bKnight, bRook]
+    ],
 
 
 
@@ -70,21 +76,19 @@ var GameEngine =
   init: function () {
 
     // assign the board
-    board = document.getElementById("chess-board");
 
     for (var i = 0; i < 8; i++) {
       var collumn = [];
       for (var j = 0; j < 8; j++) {
         var square = document.createElement("div");
         if ((i + j) % 2 == 0) {
-          board.appendChild(square).classList.add("white-square");
-          square.addEventListener("click", readInput);
+          this.board.appendChild(square).classList.add("white-square");
 
         }
         else {
-          board.appendChild(square).classList.add("black-square");
-          square.addEventListener("click", readInput);
+          this.board.appendChild(square).classList.add("black-square");
         }
+        square.addEventListener("click", readInput);
         collumn.push(square);
       }
       this.squares.push(collumn);
@@ -94,16 +98,17 @@ var GameEngine =
   // Using the initialTable,set the pieces at starting positions.
   resetGame: function () {
 
-    for (var i = 0; i < this.squares.length; ++i) {
-      for (var j = 0; j < this.squares[i].length; ++j) {
+    for (let i = 0; i < this.squares.length; ++i) {
+      for (let j = 0; j < this.squares[i].length; ++j) {
 
-        var path = this.getPath(this.initialTable[i][j][this.piece]);
+        let path = this.getPath(this.initialTable[i][j]);
+        let square = this.squares[i][j];
 
-        if (this.squares[i][j].childNodes[0])
-          this.squares[i][j].removeChild(this.squares[i][j].firstChild);
+        if (square.childNodes[0])
+          square.removeChild(this.squares[i][j].firstChild);
 
-        if (path == empty) continue;
-        var img = this.squares[i][j].appendChild(document.createElement("img"));
+        if (path == this.empty) continue;
+        var img = square.appendChild(document.createElement("img"));
         img.src = path;
         img.classList.add("piece");
       }
@@ -129,95 +134,104 @@ var GameEngine =
     }
   },
 
-  HighlightPawnMoves: function (piece, squareCoords) {
+  isEmptySquare: function (coordsY, coordsX) {
+    return this.currentTable[coordsY][coordsX] == empty;
+  },
+  atStartingPosition(coordsY, coordsX) {
+    return this.currentTable[coordsY][coordsX] == this.initialTable[coordsY][coordsX];
+  },
 
+  markAvailablePawnMoves: function (piece, squareCoords) {
+
+    let squareCoordsY = squareCoords[0];
+    let squareCoordsX = squareCoords[1];
     switch (piece) {
       case wPawn:
         // if the pawn is at starting position
         // highlight the two squares in front.
-        if (currentTable[squareCoords[0]][squareCoords[1]] == initialTable[squareCoords[0]][squareCoords[1]]) {
-          if (currentTable[squareCoords[0] + 1][squareCoords[1]][piece] == empty) {
-            currentTable[squareCoords[0] + 1][squareCoords[1]][state] =
-              available;
+        if (this.atStartingPosition(squareCoordsY, squareCoordsX)) {
 
-            if (currentTable[squareCoords[0] + 2][squareCoords[1]][piece] == empty)
-              currentTable[squareCoords[0] + 2][squareCoords[1]][state] =
-                available;
+          if (this.isEmptySquare(squareCoordsY + 1, squareCoordsX)) {
+            this.available.push([squareCoordsY + 1, squareCoordsX]);
+
+            if (this.isEmptySquare(squareCoordsY + 2, squareCoordsX))
+              this.available.push([squareCoordsY + 2, squareCoordsX]);
           }
         }
         // highlight the square in front of the pawn
-        else if (squareCoords[0] + 1 <= currentTable.length) {
-          if (currentTable[squareCoords[0] + 1][squareCoords[1]][piece] == empty) {
-            currentTable[squareCoords[0] + 1][squareCoords[1]][state] = available;
+        else if (squareCoordsY + 1 <= currentTable.length) {
+          if (this.isEmptySquare(squareCoordsY + 1, squareCoordsX)) {
+            this.available.push([squareCoordsY + 1, squareCoordsX]);
           }
         }
 
         // if pawn can capture a piece on the left
-        if (squareCoords[1] - 1 >= 0 && squareCoords[0] + 1 <= currentTable.length) {
-          switch (currentTable[squareCoords[0] + 1][squareCoords[1] - 1][piece]) {
+        if (squareCoordsX - 1 >= 0 && squareCoordsY + 1 <= this.currentTable.length) {
+          switch (this.currentTable[squareCoordsY + 1][squareCoordsX - 1]) {
             case bPawn: case bBishop: case bRook: case bKnight:
             case bQueen:
-              currentTable[squareCoords[0] + 1][squareCoords[1] - 1][state] = available;
+              this.available.push([squareCoordsY + 1, squareCoordsX - 1]);
           }
         }
 
         // if pawn can capture a piece on the right
-        if (squareCoords[1] + 1 <= currentTable[squareCoords[0]].length && squareCoords[0] + 1 <= currentTable[squareCoords[0]].length) {
-          switch (currentTable[squareCoords[0] + 1][squareCoords[1] + 1][piece]) {
+        if (squareCoordsX + 1 <= 8 && squareCoordsY + 1 <= 8) {
+          switch (this.currentTable[squareCoordsY + 1][squareCoordsX + 1]) {
             case bPawn: case bBishop: case bRook: case bKnight:
             case bQueen:
-              currentTable[squareCoords[0] + 1][squareCoords[1] + 1][state] = available;
+              this.available.push([squareCoordsY + 1, squareCoordsX + 1]);
           }
         }
     }
   },
   // should work on this one.
+
   HighlightAvailableMoves: function (squareCoords) {
     // get the piece in that square
-    piece = getSquaresPiece(squareCoords);
+    piece = this.getSquaresPiece(squareCoords);
+    console.log(piece);
 
     switch (piece) {
       case bPawn:
       case wPawn:
-        HighlightPawnMoves(piece, squareCoords);
+        this.markAvailablePawnMoves(piece, squareCoords);
         break;
+    }
+
+    for (let i = 0; i < this.available.length; ++i) {
+      let markY = this.available[i][0];
+      let markX = this.available[i][1];
+      this.squares[markY][markX].classList.add("available");
     }
   },
 
   getSquareCoords: function (square) {
 
-    for (let i = 0; i < squares.length; ++i) {
-      for (let j = 0; j < squares[i].length; ++j) {
-        if (squares[i][j] == square)
+    for (let i = 0; i < this.squares.length; ++i) {
+      for (let j = 0; j < this.squares[i].length; ++j) {
+        if (this.squares[i][j] == square)
           return [i, j];
       }
     }
   },
 
   getSquaresPiece: function (squaresCoords) {
-    for (let i = 0; i < currentTable.length; ++i) {
-      for (let j = 0; j < currentTable[i].length; ++j) {
-        if (i == squaresCoords[0] && j == squaresCoords[1])
-          return currentTable[i][j][piece];
-      }
-    }
+
+
+    return this.currentTable[squaresCoords[0]][squaresCoords[1]];
   },
 
-  alreadyHaveSelected: function () {
-    for (let i = 0; i < currentTable.length; ++i) {
-      for (let j = 0; j < currentTable[i].length; ++i) {
-        if (currentTable[i][j][state] == selected)
-          return true;
-      }
-    }
-    return false;
+  alreadyHaveSelected: function (squareCoords) {
+
+    this.selected.length > 0;
+
   },
 
-  isValidMove: function (availableMoves, coords) {
-    for (let i = 0; i < availableMoves.length; ++i) {
+  isValidMove: function (coords) {
+    for (let i = 0; i < this.available.length; ++i) {
       let canMove = true;
       for (let j = 0; j < 2; ++j) {
-        if (availableMoves[j] != coords[j]) {
+        if (this.available[j] != coords[j]) {
           canMove = false;
           break;
         }
@@ -227,9 +241,100 @@ var GameEngine =
     return false;
   },
 
+
+  selectPiece: function (coords) {
+
+    this.selected = coords;
+    let selectedY = this.selected[0];
+    let selectedX = this.selected[1];
+    this.squares[selectedY][selectedX].classList.add("selected");
+    console.log(this.selected);
+  },
+
+
+  eraseSelectedAndAvailable() {
+    // remove the selected square
+    let selectedY = this.selected[0];
+    let selectedX = this.selected[1];
+    this.squares[selectedY][selectedX].classList.remove("selected");
+    this.selected = [];
+
+    // remove the available squares
+    for (let i = 0; i < this.available.length; ++i) {
+      let availableY = available[i][0];
+      let availableX = available[i][1];
+      this.squares[availableY][availableX].classList.remove("selected");
+    }
+    available = [];
+  },
+
+  move: function (moveCoords) {
+    let moveCoordsY = moveCoords[0];
+    let moveCoordsX = moveCoords[1];
+    if (this.squares[moveCoordsY][moveCorodsX] == empty) {
+      this.eraseSelectedAndAvailable();
+    }
+    if (this.isValidMove(moveCoords)) {
+
+      let selectedY = this.selected[0];
+      let selectedX = this.selected[1];
+
+      let moveY = moveCoords[0];
+      let moveX = moveCoords[1];
+      let selectedSquare = sqares[selectedY][selectedX];
+      let moveSquare = square[moveY][moveX];
+
+      let path = getPath(table[selectedY][selectedX]);
+
+      if (moveSquare.childNodes[0]) {
+        moveSquare.removeChild(moveSquare.firstChild);
+      }
+
+      // update the user interface
+      let img = moveSquare.appendChild(document.createElement("img"));
+      img.src = path;
+      img.classList.add("piece");
+      selectedSquare.removeChild(selectedSquare.firstChild);
+      this.whiteTurn = !this.whiteTurn;
+
+      //update the current table
+      let selectedPiece = currentTable[selectedY][selectedX];
+      this.currentTable[selectedY][selectedX] = empty;
+      this.currentTable[moveY][moveX] = selectedPiece;
+    }
+  },
+
+  // should fix this function
+  executeInput: function (square) {
+    let squareCoords = this.getSquareCoords(square);
+    if (this.alreadyHaveSelected(squareCoords)) {
+      console.log("YUP");
+      // check if its available move and move it...
+      if (this.isValidMove(squareCoords)) {
+        this.move(squareCoords);
+      }
+      // if the player selects other piece of hes own.
+      else {
+        if (this.isValidSelection(squareCoords)) {
+          this.selectPiece(squareCoords);
+          this.HighlightAvailableMoves(squareCoords)
+        }
+      }
+    }
+    else {
+      // check if the selection is right and if so select the piece
+      if (this.isValidSelection(squareCoords)) {
+        this.selectPiece(squareCoords);
+        this.HighlightAvailableMoves(squareCoords)//pseudo
+      }
+
+    }
+  },
+
+
   isWhitePiece: function (coords) {
 
-    switch (currentTable[coords[0]][coords[1][piece]]) {
+    switch (this.currentTable[coords[0]][coords[1]]) {
       case wKnight:
       case wRook:
       case wKnight:
@@ -241,93 +346,14 @@ var GameEngine =
         return false;
     }
   },
-  isValidSelction: function (coords) {
-    if (whiteTurn) {
-      return isWhitePiece(coords);
+
+
+  isValidSelection: function (coords) {
+    if (this.whiteTurn) {
+      return this.isWhitePiece(coords);
     }
     else
-      return !isWhitePiece(coords);
-  },
-
-  selectPiece: function (coords) {
-
-    // change the state of the piece/square to selected
-    currentTable[coords[0]][coords[1]][state] = selected;
-    squares[coords[0]][coords[1]].classList.add("selected")
-  },
-
-  getAvailableMoves: function () {
-    let availableMoves = [];
-    for (let i = 0; i < currentTable.length; ++i) {
-      for (let j = 0; j < currentTable[i].length; ++j) {
-        if (table[i][j][state] == available)
-          availableMoves.push([i, j]);
-      }
-    }
-  },
-
-  getSelectedCoords: function () {
-    for (let i = 0; i < currentTable.length; ++i) {
-      for (let j = 0; j < currentTable[i].length; ++j) {
-        if (currentTable[i][j][state] == selected)
-          return [i, j];
-      }
-    }
-
-  },
-
-  move: function (moveCoords) {
-
-    let availableMoves = getAvailableMoves();
-    if (isValidMove(availableMoves, moveCoords)) {
-
-      let selectedCoords = getSelectedCoords();
-      let selectedSquare = sqares[selectedCoords[0]][selectedCoords[1]];
-      let moveSquare = square[moveCoords[0]][moveCoords[1]];
-
-      let path = getPath(table[selectedCoords[0]][selectedCoords[1]][piece]);
-
-      if (moveSquare.childNodes[0]) {
-        moveSquare.removeChild(moveSquare.firstChild);
-      }
-
-      // update the user interface
-      let img = moveSquare.appendChild(document.createElement("img"));
-      img.src = path;
-      img.classList.add("piece");
-      selectedSquare.removeChild(selectedSquare.firstChild);
-      whiteTurn = !whiteTurn;
-
-      //update the current table
-      let selectedPiece = currentTable[selectedCoords[0][selectedCoords[1]]]
-      currentTable[selectedCoords[0][selectedCoords[1]]] = empty;
-      currentTable[moveCoords[0]][moveCoords[1]] = selectedPiece;
-    }
-  },
-
-  executeInput: function (square) {
-    let squareCoords = getSquareCoords(square);
-    if (this.alreadyHaveSelected()) {
-      // check if its available move and move it...
-      if (isValidMove(squareCoords)) {
-        move(squareCoords)//pseudo
-      }
-      // if the player selects other piece of hes own.
-      else {
-        if (isValidSelction(squareCoords)) {
-          selectPiece(squareCoords);
-          HighlightAvailableMoves(squareCoords)//pseudo
-        }
-      }
-    }
-    else {
-      // check if the selection is right and if so select the piece
-      if (isValidSelction(squareCoords)) {
-        selectPiece(squareCoords);
-        HighlightAvailableMoves(squareCoords)//pseudo
-      }
-
-    }
+      return !this.isWhitePiece(coords);
   },
 }
 

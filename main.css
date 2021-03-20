@@ -57,7 +57,7 @@ body
  background-color: green;
 }
 
-.possible-moves
+.available
 {
  background-color: red;
 }

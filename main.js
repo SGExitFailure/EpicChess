@@ -184,12 +184,11 @@ var GameEngine =
         }
     }
   },
-  // should work on this one.
+
 
   HighlightAvailableMoves: function (squareCoords) {
     // get the piece in that square
     piece = this.getSquaresPiece(squareCoords);
-    console.log(piece);
 
     switch (piece) {
       case bPawn:
@@ -223,7 +222,7 @@ var GameEngine =
 
   alreadyHaveSelected: function (squareCoords) {
 
-    this.selected.length > 0;
+    return this.selected.length > 0;
 
   },
 
@@ -231,11 +230,12 @@ var GameEngine =
     for (let i = 0; i < this.available.length; ++i) {
       let canMove = true;
       for (let j = 0; j < 2; ++j) {
-        if (this.available[j] != coords[j]) {
+        if (this.available[i][j] != coords[j]) {
           canMove = false;
           break;
         }
       }
+      console.log(canMove);
       if (canMove) return true;
     }
     return false;
@@ -248,7 +248,6 @@ var GameEngine =
     let selectedY = this.selected[0];
     let selectedX = this.selected[1];
     this.squares[selectedY][selectedX].classList.add("selected");
-    console.log(this.selected);
   },
 
 
@@ -263,7 +262,7 @@ var GameEngine =
     for (let i = 0; i < this.available.length; ++i) {
       let availableY = available[i][0];
       let availableX = available[i][1];
-      this.squares[availableY][availableX].classList.remove("selected");
+      this.squares[availableY][availableX].classList.remove("available");
     }
     available = [];
   },
@@ -271,8 +270,9 @@ var GameEngine =
   move: function (moveCoords) {
     let moveCoordsY = moveCoords[0];
     let moveCoordsX = moveCoords[1];
-    if (this.squares[moveCoordsY][moveCorodsX] == empty) {
+    if (this.squares[moveCoordsY][moveCoordsX] == empty) {
       this.eraseSelectedAndAvailable();
+      return;
     }
     if (this.isValidMove(moveCoords)) {
 
@@ -281,10 +281,10 @@ var GameEngine =
 
       let moveY = moveCoords[0];
       let moveX = moveCoords[1];
-      let selectedSquare = sqares[selectedY][selectedX];
-      let moveSquare = square[moveY][moveX];
+      let selectedSquare = this.squares[selectedY][selectedX];
+      let moveSquare = this.squares[moveY][moveX];
 
-      let path = getPath(table[selectedY][selectedX]);
+      let path = this.getPath(this.currentTable[selectedY][selectedX]);
 
       if (moveSquare.childNodes[0]) {
         moveSquare.removeChild(moveSquare.firstChild);
@@ -301,6 +301,8 @@ var GameEngine =
       let selectedPiece = currentTable[selectedY][selectedX];
       this.currentTable[selectedY][selectedX] = empty;
       this.currentTable[moveY][moveX] = selectedPiece;
+      console.log("!");
+      eraseSelectedAndAvailable();
     }
   },
 
@@ -308,9 +310,10 @@ var GameEngine =
   executeInput: function (square) {
     let squareCoords = this.getSquareCoords(square);
     if (this.alreadyHaveSelected(squareCoords)) {
-      console.log("YUP");
+
       // check if its available move and move it...
       if (this.isValidMove(squareCoords)) {
+        console.log("YUP");
         this.move(squareCoords);
       }
       // if the player selects other piece of hes own.
@@ -325,7 +328,7 @@ var GameEngine =
       // check if the selection is right and if so select the piece
       if (this.isValidSelection(squareCoords)) {
         this.selectPiece(squareCoords);
-        this.HighlightAvailableMoves(squareCoords)//pseudo
+        this.HighlightAvailableMoves(squareCoords)
       }
 
     }
